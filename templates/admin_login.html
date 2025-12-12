@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% block title %}BOXCLOUD - Admin Login{% endblock %}
+{% block styles %}
+<style>
+    body {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    .login-container {
+        background: white;
+        padding: 48px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        width: 100%;
+        max-width: 440px;
+    }
+    .logo-section {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    .logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        border-radius: 16px;
+        font-size: 40px;
+        margin-bottom: 16px;
+    }
+    .admin-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #323130;
+        margin-bottom: 8px;
+    }
+    .admin-subtitle {
+        color: #605e5c;
+        font-size: 14px;
+    }
+    .admin-badge {
+        display: inline-block;
+        background: #d13438;
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 12px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #323130;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #edebe9;
+        border-radius: 6px;
+        font-size: 15px;
+        transition: all 0.3s;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: #1e3c72;
+    }
+    .password-input-wrapper {
+        position: relative;
+    }
+    .password-input-wrapper input {
+        padding-right: 45px;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 4px 8px;
+        color: #605e5c;
+        transition: color 0.2s;
+    }
+    .password-toggle:hover {
+        color: #1e3c72;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 8px;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+    }
+    .message {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        text-align: center;
+        display: none;
+    }
+    .message.error {
+        background: #fde7e9;
+        color: #d13438;
+        border: 1px solid #f1aeb5;
+    }
+    .message.show {
+        display: block;
+    }
+    .info-box {
+        background: #f0f6ff;
+        border-left: 4px solid #1e3c72;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+    }
+    .info-box h4 {
+        color: #1e3c72;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    .info-box p {
+        color: #605e5c;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .credentials {
+        background: #f9f9f9;
+        padding: 12px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+    .security-notice {
+        background: #fff4ce;
+        border: 1px solid #ffe89d;
+        padding: 12px;
+        border-radius: 6px;
+        margin-top: 24px;
+        font-size: 13px;
+        color: #8a6d3b;
+        text-align: center;
+    }
+    .back-link {
+        text-align: center;
+        margin-top: 24px;
+    }
+    .back-link a {
+        color: #1e3c72;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+    .create-admin-link {
+        text-align: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #edebe9;
+    }
+    .create-admin-link a {
+        color: #1e3c72;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .create-admin-link a:hover {
+        text-decoration: underline;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal.active {
+        display: flex;
+    }
+    .modal-content {
+        background: white;
+        padding: 24px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #323130;
+    }
+    .modal-body {
+        margin-bottom: 20px;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+    .btn {
+        padding: 8px 16px;
+        border: 1px solid #edebe9;
+        background: #f3f2f1;
+        color: #323130;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn:hover {
+        background: #edebe9;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border: none;
+    }
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="login-container">
+    <div class="logo-section">
+        <div class="logo">🔐</div>
+        <div class="admin-title">BOXCLOUD Admin</div>
+        <div class="admin-subtitle">Administration Panel</div>
+        <div class="admin-badge">RESTRICTED ACCESS</div>
+    </div>
+
+    <div class="info-box">
+        <h4>⚠️ Default Credentials (First Time Login)</h4>
+        <p>If this is your first login, use the default credentials below. <strong>Change your password immediately after logging in!</strong></p>
+        <div class="credentials">
+            Username: admin<br>
+            Password: Admin@123
+        </div>
+    </div>
+
+    <form id="adminLoginForm">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter admin username" required autocomplete="username" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="password" name="password" placeholder="Enter admin password" required autocomplete="current-password" />
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" id="passwordToggle">👁️</button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">Sign In to Admin Panel</button>
+    </form>
+
+    <div class="message" id="message"></div>
+
+    <div class="security-notice">
+        🔒 This is a secure admin area. All login attempts are logged.
+    </div>
+
+    <div class="create-admin-link">
+        <a href="#" onclick="showCreateAdminModal(); return false;">➕ Create New Admin</a>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('login') }}">← Back to User Login</a>
+    </div>
+</div>
+
+<!-- Create Admin Modal -->
+<div class="modal" id="createAdminModal">
+    <div class="modal-content">
+        <div class="modal-header">Create New Admin Account</div>
+        <div class="modal-body">
+            <p style="color: #605e5c; margin-bottom: 16px; font-size: 14px;">
+                Create a new admin account. The new admin will use the default password <strong>Admin@123</strong> and will be prompted to change it on first login.
+            </p>
+            <div class="form-group">
+                <label for="newAdminUsername">Username</label>
+                <input type="text" id="newAdminUsername" placeholder="Enter username for new admin" />
+            </div>
+            <div class="message" id="createAdminMessage"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeCreateAdminModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="createNewAdmin()">Create Admin</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const toggleButton = document.getElementById('passwordToggle');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleButton.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            toggleButton.textContent = '👁️';
+        }
+    }
+
+    function showCreateAdminModal() {
+        document.getElementById('createAdminModal').classList.add('active');
+        document.getElementById('newAdminUsername').value = '';
+        document.getElementById('createAdminMessage').className = 'message';
+        document.getElementById('createAdminMessage').textContent = '';
+    }
+
+    function closeCreateAdminModal() {
+        document.getElementById('createAdminModal').classList.remove('active');
+        document.getElementById('newAdminUsername').value = '';
+        document.getElementById('createAdminMessage').className = 'message';
+        document.getElementById('createAdminMessage').textContent = '';
+    }
+
+    async function createNewAdmin() {
+        const username = document.getElementById('newAdminUsername').value.trim();
+        const message = document.getElementById('createAdminMessage');
+
+        if (!username) {
+            message.textContent = 'Please enter a username';
+            message.className = 'message error show';
+            return;
+        }
+
+        if (username.length < 3) {
+            message.textContent = 'Username must be at least 3 characters';
+            message.className = 'message error show';
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/create-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                message.textContent = 'Admin created successfully! Username: ' + username + ', Password: Admin@123';
+                message.className = 'message show';
+                message.style.background = '#e8f5e9';
+                message.style.color = '#2e7d32';
+                message.style.border = '1px solid #a5d6a7';
+                document.getElementById('newAdminUsername').value = '';
+                setTimeout(() => {
+                    closeCreateAdminModal();
+                }, 2000);
+            } else {
+                message.textContent = data.error || 'Failed to create admin';
+                message.className = 'message error show';
+            }
+        } catch (error) {
+            message.textContent = 'Connection error. Please try again.';
+            message.className = 'message error show';
+        }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('createAdminModal').addEventListener('click', (e) => {
+        if (e.target.id === 'createAdminModal') {
+            closeCreateAdminModal();
+        }
+    });
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const message = document.getElementById('message');
+        const loginBtn = document.getElementById('loginBtn');
+
+        if (!username || !password) {
+            message.textContent = 'Please enter both username and password';
+            message.className = 'message error show';
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Signing In...';
+
+        try {
+            const response = await fetch('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.requires_password_change) {
+                    // Redirect to intermediate page for default password
+                    window.location.href = data.redirect;
+                } else {
+                    message.textContent = 'Login successful! Redirecting...';
+                    message.className = 'message show';
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
+                }
+            } else {
+                message.textContent = data.message || 'Invalid credentials. Please try again.';
+                message.className = 'message error show';
+                document.getElementById('password').value = '';
+            }
+        } catch (error) {
+            message.textContent = 'Connection error. Please check your network and try again.';
+            message.className = 'message error show';
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Sign In to Admin Panel';
+        }
+    });
+</script>
+{% endblock %}
+
+

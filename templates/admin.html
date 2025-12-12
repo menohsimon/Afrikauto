@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block title %}BOXCLOUD - Admin Panel{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+{% endblock %}
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="navbar-left">
+        <div class="logo">
+            <span>📦</span>
+            <span>BOXCLOUD Admin</span>
+        </div>
+        <div class="admin-badge">ADMIN</div>
+    </div>
+    <div class="navbar-right">
+        <span>{{ admin.username if admin else 'Admin' }}</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="menu-item active" onclick="showSection('dashboard')">
+            <span>📊</span>
+            <span>Dashboard</span>
+        </div>
+        <div class="menu-item" onclick="showSection('users')">
+            <span>👥</span>
+            <span>Users</span>
+        </div>
+        <div class="menu-item" onclick="showSection('nodes')">
+            <span>🖥️</span>
+            <span>Storage Nodes</span>
+        </div>
+        <div class="menu-item" onclick="showSection('settings')">
+            <span>⚙️</span>
+            <span>Settings</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div class="page-header">
+                <div class="page-title">Dashboard</div>
+                <div class="page-subtitle">System Overview and Statistics</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-subtext" id="activeUsers">0 active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Storage Used</div>
+                    <div class="stat-value" id="storageUsed">0 GB</div>
+                    <div class="stat-subtext" id="storagePercent">0% of total</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Storage Nodes</div>
+                    <div class="stat-value" id="totalNodes">0</div>
+                    <div class="stat-subtext" id="activeNodes">0 online</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-label">Node Capacity</div>
+                    <div class="stat-value" id="nodeCapacity">0 GB</div>
+                    <div class="stat-subtext" id="nodeUsed">0 GB used</div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Recent Activity</div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="lastRefreshTime" style="font-size: 12px; color: #605e5c;">Last updated: --</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p style="color: #605e5c;">
+                        <span style="display: inline-block; width: 8px; height: 8px; background: #107c10; border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite;"></span>
+                        System statistics updated in real-time (every 1 minute)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users" class="section">
+            <div class="page-header">
+                <div class="page-title">User Management</div>
+                <div class="page-subtitle">Manage user accounts and permissions</div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">All Users</div>
+                    <button class="btn btn-primary btn-sm" onclick="refreshPage()">🔄 Refresh</button>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Storage Used</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nodes Section -->
+        <div id="nodes" class="section">
+            <div class="page-header">
+                <div class="page-title">Storage Nodes</div>
+                <div class="page-subtitle">Manage distributed storage infrastructure</div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Storage Nodes</div>
+                    <button class="btn btn-primary btn-sm" onclick="showAddNodeModal()">+ Add Node</button>
+                </div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Node ID</th>
+                                <th>Host:Port</th>
+                                <th>Capacity</th>
+                                <th>Used Space</th>
+                                <th>Usage %</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nodesTable">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="section">
+            <div class="page-header">
+                <div class="page-title">Settings</div>
+                <div class="page-subtitle">Admin account settings</div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="card-title">Change Username</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Current Username</label>
+                        <input type="text" id="currentUsername" value="{{ admin.username if admin else '' }}" disabled style="background: #f3f2f1; cursor: not-allowed;" />
+                    </div>
+                    <div class="form-group">
+                        <label>New Username</label>
+                        <input type="text" id="newUsername" placeholder="Enter new username" />
+                    </div>
+                    <button class="btn btn-primary" onclick="changeUsername()">Update Username</button>
+                </div>
+            </div>
+
+            <div class="content-card" style="margin-top: 24px;">
+                <div class="card-header">
+                    <div class="card-title">Change Password</div>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="currentPassword" />
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('currentPassword', 'adminCurrentPasswordToggle')">
+                                <span id="adminCurrentPasswordToggle">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="newPassword" />
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('newPassword', 'adminNewPasswordToggle')">
+                                <span id="adminNewPasswordToggle">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmPassword" />
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword', 'adminConfirmPasswordToggle')">
+                                <span id="adminConfirmPasswordToggle">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
+                </div>
+            </div>
+
+            <div class="content-card" style="margin-top: 24px; border: 2px solid #d13438;">
+                <div class="card-header">
+                    <div class="card-title" style="color: #d13438;">Delete Admin Account</div>
+                </div>
+                <div class="card-body">
+                    <p style="color: #605e5c; margin-bottom: 16px; font-size: 14px;">
+                        ⚠️ <strong>Warning:</strong> Deleting your admin account is permanent and cannot be undone. You will be logged out immediately.
+                    </p>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="deletePassword" placeholder="Enter your password to confirm deletion" />
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('deletePassword', 'adminDeletePasswordToggle')">
+                                <span id="adminDeletePasswordToggle">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteAdminAccount()">Delete My Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Node Modal -->
+<div class="modal" id="addNodeModal">
+    <div class="modal-content">
+        <div class="modal-header">Add Storage Node</div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Node ID</label>
+                <input type="text" id="nodeId" placeholder="e.g., node3" />
+            </div>
+            <div class="form-group">
+                <label>Host</label>
+                <input type="text" id="nodeHost" placeholder="localhost" value="localhost" />
+            </div>
+            <div class="form-group">
+                <label>Port</label>
+                <input type="number" id="nodePort" placeholder="50053" />
+            </div>
+            <div class="form-group">
+                <label>Capacity (GB)</label>
+                <input type="number" id="nodeCapacityInput" placeholder="100" />
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal('addNodeModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addNode()">Add Node</button>
+        </div>
+    </div>
+</div>
+
+<!-- Node Settings Modal -->
+<div class="modal" id="nodeSettingsModal">
+    <div class="modal-content">
+        <div class="modal-header">Node Settings - <span id="settingsNodeIdHeader"></span></div>
+        <div class="modal-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">Node ID</label>
+                        <div style="font-size: 16px; font-weight: 600; color: #323130;" id="settingsNodeId"></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">Host:Port</label>
+                        <div style="font-size: 16px; color: #323130;" id="settingsHostPort"></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">Status</label>
+                        <span id="settingsStatus" class="badge"></span>
+                    </div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">CPU Capacity</label>
+                        <div style="font-size: 16px; font-weight: 600; color: #323130;" id="settingsCpu"></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">Memory</label>
+                        <div style="font-size: 16px; font-weight: 600; color: #323130;" id="settingsMemory"></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">Storage Capacity</label>
+                        <div style="font-size: 16px; font-weight: 600; color: #323130;" id="settingsStorage"></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; color: #605e5c; font-size: 12px; font-weight: 500;">Bandwidth</label>
+                        <div style="font-size: 16px; font-weight: 600; color: #323130;" id="settingsBandwidth"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal('nodeSettingsModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification"></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='admin.js') }}"></script>
+{% if open_settings %}
+<script>
+    // Auto-open settings section when redirected from password choice
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            if (typeof showSection === 'function') {
+                showSection('settings', true);
+            }
+        }, 100);
+    });
+</script>
+{% endif %}
+{% endblock %}
+
